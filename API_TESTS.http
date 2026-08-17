@@ -1,0 +1,88 @@
+@baseUrl = http://localhost:5000/api
+@tokenA = REPLACE_WITH_USER_A_TOKEN
+@tokenB = REPLACE_WITH_USER_B_TOKEN
+@vehicleA = REPLACE_WITH_USER_A_VEHICLE_ID
+@serviceA = REPLACE_WITH_USER_A_SERVICE_ID
+
+### Health
+GET {{baseUrl}}/health
+
+### Register User A
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "User A",
+  "email": "usera@example.com",
+  "password": "Password123!"
+}
+
+### Login User A
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "usera@example.com",
+  "password": "Password123!"
+}
+
+### Create vehicle as User A
+POST {{baseUrl}}/vehicles
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "registrationNumber": "12-D-12345",
+  "make": "Toyota",
+  "model": "Corolla",
+  "year": 2018,
+  "fuelType": "Petrol",
+  "currentMileage": 82450,
+  "motNctExpiryDate": "2026-12-18"
+}
+
+### Create service as User A
+POST {{baseUrl}}/vehicles/{{vehicleA}}/services
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "serviceType": "Oil Change",
+  "garage": "City Motors",
+  "date": "2026-08-12",
+  "mileage": 82450,
+  "cost": 120,
+  "replacedParts": "Oil filter",
+  "notes": "Routine oil and filter replacement"
+}
+
+### Negative test: protected route with no token
+GET {{baseUrl}}/vehicles
+
+### Negative test: invalid mileage
+POST {{baseUrl}}/vehicles
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "registrationNumber": "BAD-TEST",
+  "make": "Test",
+  "model": "Invalid",
+  "year": 2020,
+  "fuelType": "Petrol",
+  "currentMileage": -100,
+  "motNctExpiryDate": "2027-01-01"
+}
+
+### Security test: User B tries to read User A vehicle
+GET {{baseUrl}}/vehicles/{{vehicleA}}
+Authorization: Bearer {{tokenB}}
+
+### Security test: User B tries to edit User A service
+PUT {{baseUrl}}/services/{{serviceA}}
+Authorization: Bearer {{tokenB}}
+Content-Type: application/json
+
+{
+  "serviceType": "Unauthorized change"
+}
